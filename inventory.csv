@@ -1,0 +1,111 @@
+id,name,price,availableQuantity
+SHOE_001,Classic Running Shoes - Black,89.99,150
+SHOE_002,Classic Running Shoes - White,89.99,140
+SHOE_003,Classic Running Shoes - Blue,89.99,130
+SHOE_004,Athletic Sneakers - Red,79.99,160
+SHOE_005,Athletic Sneakers - Grey,79.99,155
+SHOE_006,High-Top Basketball Shoes - Black,119.99,95
+SHOE_007,High-Top Basketball Shoes - White,119.99,85
+SHOE_008,Casual Canvas Shoes - Khaki,59.99,200
+SHOE_009,Casual Canvas Shoes - Navy,59.99,195
+SHOE_010,Slip-On Loafers - Brown,99.99,75
+SHOE_011,Slip-On Loafers - Black,99.99,80
+SHOE_012,Outdoor Hiking Boots - Brown,149.99,60
+SHOE_013,Outdoor Hiking Boots - Grey,149.99,55
+SHOE_014,Lightweight Walking Shoes - Black,69.99,180
+SHOE_015,Lightweight Walking Shoes - Navy,69.99,175
+TSHIRT_001,Classic White T-Shirt - S,24.99,300
+TSHIRT_002,Classic White T-Shirt - M,24.99,350
+TSHIRT_003,Classic White T-Shirt - L,24.99,320
+TSHIRT_004,Classic White T-Shirt - XL,24.99,250
+TSHIRT_005,Classic White T-Shirt - XXL,24.99,180
+TSHIRT_006,Black Crew Neck T-Shirt - S,24.99,280
+TSHIRT_007,Black Crew Neck T-Shirt - M,24.99,330
+TSHIRT_008,Black Crew Neck T-Shirt - L,24.99,310
+TSHIRT_009,Black Crew Neck T-Shirt - XL,24.99,240
+TSHIRT_010,Black Crew Neck T-Shirt - XXL,24.99,160
+TSHIRT_011,Graphic Logo T-Shirt - S,34.99,200
+TSHIRT_012,Graphic Logo T-Shirt - M,34.99,240
+TSHIRT_013,Graphic Logo T-Shirt - L,34.99,220
+TSHIRT_014,Graphic Logo T-Shirt - XL,34.99,170
+TSHIRT_015,Graphic Logo T-Shirt - XXL,34.99,120
+SHIRT_001,Oxford Button-Up Shirt - Blue,59.99,100
+SHIRT_002,Oxford Button-Up Shirt - White,59.99,120
+SHIRT_003,Oxford Button-Up Shirt - Khaki,59.99,90
+SHIRT_004,Casual Linen Shirt - Beige,49.99,110
+SHIRT_005,Casual Linen Shirt - Light Blue,49.99,105
+SHIRT_006,Flannel Plaid Shirt - Red,54.99,80
+SHIRT_007,Flannel Plaid Shirt - Green,54.99,75
+SHIRT_008,Polo Shirt - Navy,44.99,130
+SHIRT_009,Polo Shirt - White,44.99,140
+SHIRT_010,Polo Shirt - Black,44.99,120
+JEANS_001,Classic Blue Denim Jeans - 30,89.99,200
+JEANS_002,Classic Blue Denim Jeans - 32,89.99,210
+JEANS_003,Classic Blue Denim Jeans - 34,89.99,190
+JEANS_004,Classic Blue Denim Jeans - 36,89.99,160
+JEANS_005,Black Slim Fit Jeans - 30,94.99,150
+JEANS_006,Black Slim Fit Jeans - 32,94.99,160
+JEANS_007,Black Slim Fit Jeans - 34,94.99,140
+JEANS_008,Black Slim Fit Jeans - 36,94.99,110
+JEANS_009,Light Wash Distressed Jeans - 30,99.99,80
+JEANS_010,Light Wash Distressed Jeans - 32,99.99,90
+PANTS_001,Chino Pants - Navy,64.99,120
+PANTS_002,Chino Pants - Khaki,64.99,130
+PANTS_003,Chino Pants - Grey,64.99,100
+PANTS_004,Sweatpants - Black,49.99,180
+PANTS_005,Sweatpants - Grey,49.99,170
+PANTS_006,Athletic Joggers - Black,59.99,140
+PANTS_007,Athletic Joggers - Grey,59.99,130
+PANTS_008,Cargo Pants - Olive,74.99,70
+PANTS_009,Cargo Pants - Tan,74.99,65
+PANTS_010,Dress Pants - Black,84.99,80
+BELT_001,Leather Belt - Black,39.99,200
+BELT_002,Leather Belt - Brown,39.99,190
+BELT_003,Canvas Belt - Navy,24.99,250
+BELT_004,Canvas Belt - Black,24.99,240
+BELT_005,Woven Fabric Belt - Beige,29.99,180
+BELT_006,Woven Fabric Belt - Brown,29.99,170
+BELT_007,Metal Buckle Belt - Silver,34.99,120
+BELT_008,Metal Buckle Belt - Gold,34.99,110
+HAT_001,Classic Baseball Cap - Black,29.99,350
+HAT_002,Classic Baseball Cap - Navy,29.99,340
+HAT_003,Classic Baseball Cap - White,29.99,320
+HAT_004,Beanie Winter Hat - Black,34.99,280
+HAT_005,Beanie Winter Hat - Grey,34.99,270
+HAT_006,Beanie Winter Hat - Navy,34.99,260
+HAT_007,Trucker Hat - Black,32.99,220
+HAT_008,Trucker Hat - Camo,32.99,200
+HAT_009,Straw Sun Hat,44.99,150
+HAT_010,Bucket Hat - Khaki,39.99,180
+SOCK_001,Cotton Crew Socks - White 6-Pack,14.99,500
+SOCK_002,Cotton Crew Socks - Black 6-Pack,14.99,480
+SOCK_003,Athletic Performance Socks - White 3-Pack,19.99,400
+SOCK_004,Athletic Performance Socks - Black 3-Pack,19.99,380
+SOCK_005,Wool Hiking Socks 2-Pack,24.99,250
+SOCK_006,Wool Hiking Socks 2-Pack Grey,24.99,240
+SOCK_007,Bamboo Comfort Socks 3-Pack,17.99,320
+SOCK_008,Bamboo Comfort Socks 3-Pack,17.99,310
+JACKET_001,Lightweight Windbreaker - Black,84.99,90
+JACKET_002,Lightweight Windbreaker - Navy,84.99,85
+JACKET_003,Lightweight Windbreaker - Red,84.99,75
+JACKET_004,Fleece Zip Jacket - Grey,74.99,110
+JACKET_005,Fleece Zip Jacket - Navy,74.99,105
+JACKET_006,Denim Jacket - Blue,104.99,60
+JACKET_007,Denim Jacket - Black,104.99,55
+JACKET_008,Puffer Winter Jacket - Black,149.99,50
+JACKET_009,Puffer Winter Jacket - Navy,149.99,45
+JACKET_010,Leather Biker Jacket,199.99,25
+SCARF_001,Cotton Scarf - Navy,34.99,200
+SCARF_002,Cotton Scarf - Beige,34.99,195
+SCARF_003,Wool Scarf - Grey,54.99,120
+SCARF_004,Wool Scarf - Black,54.99,115
+SCARF_005,Silk Scarf - Floral,64.99,80
+GLOVES_001,Leather Gloves - Black,49.99,150
+GLOVES_002,Leather Gloves - Brown,49.99,140
+GLOVES_003,Winter Wool Gloves - Black,29.99,250
+GLOVES_004,Winter Wool Gloves - Grey,29.99,240
+UNDWEAR_001,Cotton Boxer Briefs 3-Pack - Black,24.99,400
+UNDWEAR_002,Cotton Boxer Briefs 3-Pack - White,24.99,380
+UNDWEAR_003,Premium Briefs 5-Pack - Assorted,34.99,300
+UNDWEAR_004,Womens Cotton Bikini 3-Pack - Black,24.99,350
+UNDWEAR_005,Womens Cotton Bikini 3-Pack - White,24.99,330
