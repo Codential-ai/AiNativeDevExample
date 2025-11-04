@@ -47,13 +47,24 @@ describe('ShoppingCart', () => {
     inventoryManager = new InventoryManager();
     orderService = new OrderService();
     cart = new ShoppingCart(inventoryManager, orderService);
+
+    // Mock getItemById to return valid items
+    jest.spyOn(inventoryManager, 'getItemById').mockResolvedValue({
+      _id: 'mock-id',
+      id: 'item1',
+      name: 'Test Item',
+      price: 10.00,
+      availableQuantity: 100,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
   });
 
   describe('Add items to cart', () => {
-    it('should add an item to an empty cart', () => {
-      const result = cart.addItem('item1', 2);
+    it('should add an item to an empty cart', async () => {
+      const result = await cart.addItem('item1', 2);
       expect(result).toBe(true);
-      
+
       const summary = cart.getCartSummary();
       expect(summary.items).toHaveLength(1);
       expect(summary.items[0].id).toBe('item1');
@@ -62,10 +73,10 @@ describe('ShoppingCart', () => {
   });
 
   describe('Add multiple items to cart', () => {
-    it('should add multiple different items', () => {
-      cart.addItem('item1', 1);
-      cart.addItem('item2', 2);
-      
+    it('should add multiple different items', async () => {
+      await cart.addItem('item1', 1);
+      await cart.addItem('item2', 2);
+
       const summary = cart.getCartSummary();
       expect(summary.items).toHaveLength(2);
       expect(summary.items.find(item => item.id === 'item1')).toBeDefined();
@@ -74,10 +85,10 @@ describe('ShoppingCart', () => {
   });
 
   describe('Update existing item quantity', () => {
-    it('should update quantity when adding same item again', () => {
-      cart.addItem('item1', 1);
-      cart.addItem('item1', 2);
-      
+    it('should update quantity when adding same item again', async () => {
+      await cart.addItem('item1', 1);
+      await cart.addItem('item1', 2);
+
       const summary = cart.getCartSummary();
       const item = summary.items.find(item => item.id === 'item1');
       expect(item?.quantity).toBe(3);
@@ -85,28 +96,28 @@ describe('ShoppingCart', () => {
   });
 
   describe('Reject invalid quantity', () => {
-    it('should reject zero quantity', () => {
-      const result = cart.addItem('item1', 0);
+    it('should reject zero quantity', async () => {
+      const result = await cart.addItem('item1', 0);
       expect(result).toBe(false);
-      
+
       const summary = cart.getCartSummary();
       expect(summary.items).toHaveLength(0);
     });
 
-    it('should reject negative quantity', () => {
-      const result = cart.addItem('item1', -1);
+    it('should reject negative quantity', async () => {
+      const result = await cart.addItem('item1', -1);
       expect(result).toBe(false);
-      
+
       const summary = cart.getCartSummary();
       expect(summary.items).toHaveLength(0);
     });
   });
 
   describe('Remove item completely', () => {
-    it('should remove item when no quantity specified', () => {
-      cart.addItem('item1', 3);
+    it('should remove item when no quantity specified', async () => {
+      await cart.addItem('item1', 3);
       const result = cart.removeItem('item1');
-      
+
       expect(result).toBe(true);
       const summary = cart.getCartSummary();
       expect(summary.items.find(item => item.id === 'item1')).toBeUndefined();
@@ -114,10 +125,10 @@ describe('ShoppingCart', () => {
   });
 
   describe('Remove partial quantity', () => {
-    it('should reduce quantity when partial removal', () => {
-      cart.addItem('item1', 5);
+    it('should reduce quantity when partial removal', async () => {
+      await cart.addItem('item1', 5);
       const result = cart.removeItem('item1', 2);
-      
+
       expect(result).toBe(true);
       const summary = cart.getCartSummary();
       const item = summary.items.find(item => item.id === 'item1');

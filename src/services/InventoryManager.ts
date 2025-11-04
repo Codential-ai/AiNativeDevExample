@@ -1,6 +1,6 @@
 // GENERATED FROM SPEC - DO NOT EDIT
 // @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
-// (spec:ac372cc8) (code:5a834af2)
+// (spec:968ddcf7) (code:599d6a5d)
 
 /**
  * InventoryManager service for managing inventory items in MongoDB
@@ -77,5 +77,20 @@ export class InventoryManager {
         this.reservations.delete(cartItem.id);
       }
     }
+  }
+
+  async fuzzySearchByName(query: string): Promise<InventoryItem[]> {
+    const items = await InventoryItemModel.find({
+      name: { $regex: query, $options: 'i' }
+    }).exec();
+    
+    return items.map(item => {
+      const obj = item.toObject() as unknown as InventoryItem;
+      const reserved = this.reservations.get(obj.id) || 0;
+      return {
+        ...obj,
+        availableQuantity: obj.availableQuantity - reserved
+      };
+    });
   }
 }

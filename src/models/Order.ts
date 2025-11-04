@@ -1,6 +1,6 @@
 // GENERATED FROM SPEC - DO NOT EDIT
 // @generated with Tessl v0.28.0 from ../../specs/orders.spec.md
-// (spec:d181ac47) (code:db5ef5a4)
+// (spec:d181ac47) (code:0f525aa6)
 
 import mongoose, { Schema, Document, Types } from 'mongoose';
 

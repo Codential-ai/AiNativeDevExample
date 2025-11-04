@@ -30,12 +30,12 @@ src/
 
 ## Target
 
-[@generate](../src/shopping-cart.ts)
-[@generate](../src/types/index.ts)
-[@generate](../src/models/InventoryItem.ts)
-[@generate](../src/services/InventoryManager.ts)
-[@generate](../src/services/InventoryBulkUploader.ts)
-[@generate](../src/services/ShoppingCart.ts)
+[@generate](../src/shopping-cart.ts)  
+[@generate](../src/types/index.ts)  
+[@generate](../src/models/InventoryItem.ts)  
+[@generate](../src/services/InventoryManager.ts)  
+[@generate](../src/services/InventoryBulkUploader.ts)  
+[@generate](../src/services/ShoppingCart.ts)  
 
 ## Capabilities
 
@@ -43,57 +43,58 @@ src/
 
 Allows customers to add items to their shopping cart with specified quantities.
 
-- Validates item availability in inventory before adding
-- Updates cart total when items are added
-- Handles quantity updates for existing items in cart
+- Fetches full item details (name, price) from inventory using InventoryManager.getItemById before adding [@test](../test/shopping-cart.test.ts)
+- Validates item availability in inventory before adding [@test](../test/shopping-cart.test.ts)
+- Updates cart total when items are added [@test](../test/shopping-cart.test.ts)
+- Handles quantity updates for existing items in cart [@test](../test/shopping-cart.test.ts)
 
 ### Remove Items from Cart
 
 Allows customers to remove items from their shopping cart.
 
-- Removes individual items or adjusts quantities
-- Updates cart total when items are removed
-- Handles complete item removal from cart
+- Removes individual items or adjusts quantities [@test](../test/shopping-cart.test.ts)
+- Updates cart total when items are removed [@test](../test/shopping-cart.test.ts)
+- Handles complete item removal from cart [@test](../test/shopping-cart.test.ts)
 
 ### Inventory Management
 
 Manages the backend inventory of available items, persisted to MongoDB via Mongoose.
 
-- Tracks item quantities and availability in MongoDB
-- Updates inventory when items are reserved for carts
-- Handles inventory restocking and item management
-- Prevents overselling by checking available quantities
-- Provides Mongoose schema and model for InventoryItem documents
+- Tracks item quantities and availability in MongoDB [@test](../test/shopping-cart.test.ts)
+- Updates inventory when items are reserved for carts [@test](../test/shopping-cart.test.ts)
+- Handles inventory restocking and item management [@test](../test/shopping-cart.test.ts)
+- Prevents overselling by checking available quantities [@test](../test/shopping-cart.test.ts)
+- Provides Mongoose schema and model for InventoryItem documents [@test](../test/shopping-cart.test.ts)
 
 ### Checkout Process
 
 Handles the checkout flow for completing purchases.
 
-- Validates cart contents against current inventory
-- Reserves items during checkout process
-- Calculates final totals including taxes and fees
-- Manages checkout session state
-- Creates persistent Order record in MongoDB after successful payment
+- Validates cart contents against current inventory [@test](../test/shopping-cart.test.ts)
+- Reserves items during checkout process [@test](../test/shopping-cart.test.ts)
+- Calculates final totals including taxes and fees [@test](../test/shopping-cart.test.ts)
+- Manages checkout session state [@test](../test/shopping-cart.test.ts)
+- Creates persistent Order record in MongoDB after successful payment [@test](../test/shopping-cart.test.ts)
 
 ### Payment Processing
 
 Processes payment transactions for completed orders.
 
-- Integrates with payment providers for transaction processing
-- Handles payment validation and authorization
-- Manages payment success and failure scenarios
-- Updates inventory after successful payment completion
-- Persists order to database with complete purchase details
+- Integrates with payment providers for transaction processing [@test](../test/shopping-cart.test.ts)
+- Handles payment validation and authorization [@test](../test/shopping-cart.test.ts)
+- Manages payment success and failure scenarios [@test](../test/shopping-cart.test.ts)
+- Updates inventory after successful payment completion [@test](../test/shopping-cart.test.ts)
+- Persists order to database with complete purchase details [@test](../test/shopping-cart.test.ts)
 
 ### Bulk Inventory Upload
 
 Allows administrators to bulk import inventory items from CSV files.
 
-- Parses CSV format with columns: id, name, price, availableQuantity
-- Validates CSV data before importing to MongoDB
-- Handles duplicate item IDs (skip or update based on configuration)
-- Supports batch upsert operations for efficient MongoDB writes
-- Returns import results with success/failure counts and detailed error reporting
+- Parses CSV format with columns: id, name, price, availableQuantity [@test](../test/shopping-cart.test.ts)
+- Validates CSV data before importing to MongoDB [@test](../test/shopping-cart.test.ts)
+- Handles duplicate item IDs (skip or update based on configuration) [@test](../test/shopping-cart.test.ts)
+- Supports batch upsert operations for efficient MongoDB writes [@test](../test/shopping-cart.test.ts)
+- Returns import results with success/failure counts and detailed error reporting [@test](../test/shopping-cart.test.ts)
 
 ## API
 
@@ -144,7 +145,7 @@ interface BulkUploadResult {
 
 class ShoppingCart {
   constructor(inventoryManager: InventoryManager, orderService: OrderService);
-  addItem(itemId: string, quantity: number): boolean;
+  addItem(itemId: string, quantity: number): Promise<boolean>;
   removeItem(itemId: string, quantity?: number): boolean;
   getCartSummary(): CartSummary;
   checkout(paymentDetails: PaymentDetails): Promise<CheckoutResult>;
@@ -175,173 +176,24 @@ interface BulkUploadOptions {
 
 ### Database
 
-MongoDB object modeling via Mongoose ODM for schema validation and query building.
+MongoDB object modeling via Mongoose ODM for schema validation and query building.  
 [@use](mongoose)
 
 ### Payment Processing
 
-External payment service for handling transactions.
+External payment service for handling transactions.  
 [@use](stripe)
 
 ### CSV Parsing
 
-Utility for parsing CSV data during bulk inventory imports.
+Utility for parsing CSV data during bulk inventory imports.  
 [@use](csv-parse)
 
 ### Internal Services
 
 ShoppingCart integrates with OrderService to persist completed orders to MongoDB after successful checkout.
 
-## Test Cases
+## API Integration
 
-[@test](../test/shopping-cart.test.ts)
-
-### ShoppingCart Tests
-
-#### Add items to cart
-- Given an empty shopping cart
-- When adding an item with itemId "item1" and quantity 2
-- Then the item should be added to the cart
-- And addItem should return true
-
-#### Add multiple items to cart
-- Given an empty shopping cart
-- When adding item "item1" with quantity 1
-- And adding item "item2" with quantity 2
-- Then getCartSummary should show 2 items
-- And getCartSummary items should contain both items
-
-#### Update existing item quantity
-- Given a shopping cart with item "item1" quantity 1
-- When adding the same item "item1" with quantity 2 again
-- Then the total quantity for "item1" should be 3
-
-#### Reject invalid quantity
-- Given an empty shopping cart
-- When adding an item with quantity 0 or negative
-- Then addItem should return false
-- And the item should not be added
-
-#### Remove item completely
-- Given a shopping cart with item "item1" quantity 3
-- When removing "item1" without specifying quantity
-- Then the item should be removed from cart
-- And removeItem should return true
-
-#### Remove partial quantity
-- Given a shopping cart with item "item1" quantity 5
-- When removing "item1" with quantity 2
-- Then the item quantity should become 3
-- And removeItem should return true
-
-#### Remove non-existent item
-- Given a shopping cart
-- When removing an item that doesn't exist
-- Then removeItem should return false
-
-#### Calculate cart summary with tax
-- Given a shopping cart with items subtotal 100
-- When getting cart summary
-- Then tax should be 8 (8% of 100)
-- And total should be 108
-
-### InventoryManager Tests
-
-#### Get available items
-- Given inventory with items in MongoDB
-- When calling getAvailableItems
-- Then should return all items with their quantities from database
-
-#### Get single item by ID
-- Given inventory with item "item1" in MongoDB
-- When calling getItemById("item1")
-- Then should return the item with matching ID
-
-#### Get non-existent item
-- Given an inventory
-- When calling getItemById("nonexistent")
-- Then should return null
-
-#### Update inventory quantity
-- Given item "item1" in inventory with quantity 10
-- When calling updateInventory("item1", 5)
-- Then the item quantity should update to 5 in MongoDB
-- And updateInventory should return true
-
-#### Update non-existent item
-- Given an inventory
-- When calling updateInventory("nonexistent", 10)
-- Then updateInventory should return false
-
-#### Reserve items successfully
-- Given items in inventory with sufficient quantities
-- When calling reserveItems with valid cart items
-- Then reserveItems should return true
-- And items should be marked as reserved
-
-#### Fail to reserve insufficient items
-- Given item "item1" in inventory with quantity 5
-- When attempting to reserve 10 units of "item1"
-- Then reserveItems should return false
-
-#### Release reservation
-- Given reserved items in inventory
-- When calling releaseReservation
-- Then items should no longer be reserved
-- And quantities should be available again
-
-### InventoryBulkUploader Tests
-
-#### Successfully upload valid CSV
-- Given a CSV with valid items: id, name, price, availableQuantity
-- When calling bulkUploadFromCsv
-- Then all items should be imported to MongoDB
-- And result.success should be true
-- And result.successCount should equal row count
-
-#### Skip duplicate items
-- Given existing item "dup1" in inventory
-- And a CSV containing "dup1" with onDuplicate: 'skip'
-- When calling bulkUploadFromCsv
-- Then "dup1" should remain unchanged
-- And result.successCount should include the skipped item
-
-#### Update duplicate items
-- Given existing item "dup1" with price 10
-- And a CSV containing "dup1" with price 20 and onDuplicate: 'update'
-- When calling bulkUploadFromCsv
-- Then "dup1" should be updated with price 20
-- And result.successCount should count this as success
-
-#### Reject missing required fields
-- Given a CSV with missing availableQuantity column
-- When calling bulkUploadFromCsv
-- Then result.success should be false
-- And result.failureCount should be greater than 0
-- And errors should contain details about missing fields
-
-#### Reject invalid price
-- Given a CSV with negative price or non-numeric price
-- When calling bulkUploadFromCsv
-- Then the row should fail
-- And errors should specify "Invalid price"
-
-#### Reject invalid quantity
-- Given a CSV with negative quantity or non-numeric quantity
-- When calling bulkUploadFromCsv
-- Then the row should fail
-- And errors should specify "Invalid availableQuantity"
-
-#### Handle custom delimiter
-- Given a CSV with semicolon delimiter
-- When calling bulkUploadFromCsv with delimiter ';'
-- Then items should be parsed correctly
-- And result.success should be true
-
-#### Parse mixed valid and invalid rows
-- Given a CSV with 5 rows, 3 valid and 2 invalid
-- When calling bulkUploadFromCsv
-- Then result.totalProcessed should be 5
-- And result.successCount should be 3
-- And result.failureCount should be 2
-- And result.errors should have 2 entries with row numbers
+The ShoppingCart service is exposed via RESTful API endpoints defined in a separate spec.  
+[@see](./api.spec.md)

@@ -1,13 +1,10 @@
 // GENERATED FROM SPEC - DO NOT EDIT
 // @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
-// (spec:ac372cc8) (code:54f1e862)
+// (spec:968ddcf7) (code:24b43c2a)
 
 /**
  * Type definitions for shopping cart and inventory system
  */
-
-// Re-export order types
-export type { Order, OrderItem, CreateOrderRequest } from './orders';
 
 export interface ShoppingCartItem {
   id: string;
@@ -56,4 +53,34 @@ export interface BulkUploadResult {
 export interface BulkUploadOptions {
   onDuplicate?: 'skip' | 'update';
   delimiter?: string;
+}
+
+// Order related types for integration with OrderService
+export interface OrderItem {
+  inventoryItemId: string;
+  name: string;
+  price: number;
+  quantity: number;
+  subtotal: number;
+}
+
+export interface Order {
+  orderId: string;
+  userId: string;
+  paymentId: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
+export interface CreateOrderRequest {
+  userId: string;
+  items: OrderItem[];
+  subtotal: number;
+  tax: number;
+  total: number;
+  paymentId: string;
 }

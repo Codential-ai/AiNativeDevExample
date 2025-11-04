@@ -1,6 +1,6 @@
 // GENERATED FROM SPEC - DO NOT EDIT
 // @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
-// (spec:ac372cc8) (code:09121c24)
+// (spec:968ddcf7) (code:09121c24)
 
 import { parse } from 'csv-parse';
 import { InventoryItem, BulkUploadResult, BulkUploadOptions } from '../types';

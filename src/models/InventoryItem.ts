@@ -1,6 +1,6 @@
 // GENERATED FROM SPEC - DO NOT EDIT
 // @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
-// (spec:ac372cc8) (code:036a9b62)
+// (spec:968ddcf7) (code:036a9b62)
 
 import mongoose, { Schema, Document, Model } from 'mongoose';
 

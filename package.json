@@ -24,9 +24,11 @@
   },
   "dependencies": {
     "@types/csv-parse": "^1.2.5",
+    "@types/express": "^5.0.5",
     "@types/uuid": "^11.0.0",
     "csv-parse": "^6.1.0",
     "dotenv": "^17.2.3",
+    "express": "^5.1.0",
     "mongodb": "^6.20.0",
     "mongoose": "^8.19.2",
     "next": "^16.0.0",

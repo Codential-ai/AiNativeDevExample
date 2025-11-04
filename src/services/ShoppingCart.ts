@@ -1,6 +1,6 @@
 // GENERATED FROM SPEC - DO NOT EDIT
 // @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
-// (spec:ac372cc8) (code:780c71c6)
+// (spec:968ddcf7) (code:30337aaf)
 
 /**
  * ShoppingCart service for managing customer shopping carts and checkout
@@ -28,20 +28,31 @@ export class ShoppingCart {
     this.orderService = orderService;
   }
 
-  addItem(itemId: string, quantity: number): boolean {
+  async addItem(itemId: string, quantity: number): Promise<boolean> {
     if (quantity <= 0) return false;
 
+    // Fetch item details from inventory
+    const inventoryItem = await this.inventoryManager.getItemById(itemId);
+    if (!inventoryItem) return false;
+
     const existingItem = this.items.get(itemId);
-    
+    const newQuantity = existingItem ? existingItem.quantity + quantity : quantity;
+
+    // Validate availability
+    if (inventoryItem.availableQuantity < newQuantity) {
+      return false;
+    }
+
     if (existingItem) {
-      existingItem.quantity += quantity;
+      existingItem.quantity = newQuantity;
+      existingItem.name = inventoryItem.name;
+      existingItem.price = inventoryItem.price;
     } else {
-      // Store item with placeholder values - will be populated during checkout
       this.items.set(itemId, {
         id: itemId,
-        name: '',
-        price: 0,
-        quantity: quantity
+        name: inventoryItem.name,
+        price: inventoryItem.price,
+        quantity
       });
     }
 
@@ -126,7 +137,7 @@ export class ShoppingCart {
 
         if (paymentSuccessful) {
           // Create order record - transform ShoppingCartItem to OrderItem with inventoryItemId and subtotal
-          const orderItems = updatedCartItems.map(item => ({
+          const orderItems: OrderItem[] = updatedCartItems.map(item => ({
             inventoryItemId: item.id,
             name: item.name,
             price: item.price,
@@ -134,7 +145,7 @@ export class ShoppingCart {
             subtotal: item.price * item.quantity
           }));
 
-          const createOrderRequest = {
+          const createOrderRequest: CreateOrderRequest = {
             userId: 'default-user', // In a real app, this would come from session/auth
             paymentId: `payment_${Date.now()}`,
             items: orderItems,
