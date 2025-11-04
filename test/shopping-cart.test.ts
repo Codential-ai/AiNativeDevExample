@@ -2,7 +2,17 @@
 // @generated with Tessl v0.28.0 from ../specs/shopping-cart.spec.md
 // (spec:d0ce8ada) (code:b8452c40)
 
+// Mock uuid first before any imports that use it
+let uuidCounter = 0;
+jest.mock('uuid', () => ({
+  v4: jest.fn(() => {
+    uuidCounter++;
+    return `mock-uuid-${uuidCounter}`;
+  }),
+}));
+
 import { ShoppingCart, InventoryManager, InventoryBulkUploader } from '../src/shopping-cart';
+import { OrderService } from '../src/services/OrderService';
 
 // Mock Stripe
 jest.mock('stripe');
@@ -11,7 +21,11 @@ const MockedStripe = Stripe as jest.MockedClass<typeof Stripe>;
 
 // Mock mongoose before importing
 jest.mock('mongoose', () => ({
-  Schema: jest.fn(function() { this.path = jest.fn(); }),
+  Schema: jest.fn(function() {
+    this.path = jest.fn();
+    this.index = jest.fn().mockReturnValue(this);
+    return this;
+  }),
   model: jest.fn(() => ({
     find: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue([]) }),
     findOne: jest.fn().mockReturnValue({ exec: jest.fn().mockResolvedValue(null) }),
@@ -27,10 +41,12 @@ process.env.STRIPE_SECRET_KEY = 'sk_test_fake_key_for_testing';
 describe('ShoppingCart', () => {
   let cart: ShoppingCart;
   let inventoryManager: InventoryManager;
+  let orderService: OrderService;
 
   beforeEach(() => {
     inventoryManager = new InventoryManager();
-    cart = new ShoppingCart(inventoryManager);
+    orderService = new OrderService();
+    cart = new ShoppingCart(inventoryManager, orderService);
   });
 
   describe('Add items to cart', () => {

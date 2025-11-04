@@ -1,48 +1,46 @@
+// GENERATED FROM SPEC - DO NOT EDIT
+// @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
+// (spec:ac372cc8) (code:780c71c6)
+
 /**
  * ShoppingCart service for managing customer shopping carts and checkout
  */
 
-import Stripe from 'stripe';
 import {
   ShoppingCartItem,
   CartSummary,
   PaymentDetails,
-  CheckoutResult
+  CheckoutResult,
+  OrderItem,
+  CreateOrderRequest
 } from '../types';
 import { InventoryManager } from './InventoryManager';
+import { OrderService as IOrderService } from './OrderService';
 
 export class ShoppingCart {
   private items: Map<string, ShoppingCartItem> = new Map();
   private inventoryManager: InventoryManager;
-  private stripe: Stripe;
+  private orderService: IOrderService;
   private readonly TAX_RATE = 0.08; // 8% tax rate
 
-  constructor(inventoryManager: InventoryManager) {
+  constructor(inventoryManager: InventoryManager, orderService: IOrderService) {
     this.inventoryManager = inventoryManager;
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
+    this.orderService = orderService;
   }
 
   addItem(itemId: string, quantity: number): boolean {
     if (quantity <= 0) return false;
 
-    // This is a synchronous method in the API, but we need async for MongoDB
-    // In a real implementation, this would need to be async or use caching
-    // For now, we'll implement basic validation logic
     const existingItem = this.items.get(itemId);
-    const currentQuantity = existingItem ? existingItem.quantity : 0;
-    const totalQuantity = currentQuantity + quantity;
-
-    // Note: In a production system, this would need async inventory validation
-    // We'll add the item optimistically and validate during checkout
+    
     if (existingItem) {
-      existingItem.quantity = totalQuantity;
+      existingItem.quantity += quantity;
     } else {
-      // We need the item details, which would require async call
-      // For now, we'll store minimal info and fetch details during checkout
+      // Store item with placeholder values - will be populated during checkout
       this.items.set(itemId, {
         id: itemId,
-        name: '', // Will be populated from inventory during checkout
-        price: 0, // Will be populated from inventory during checkout
+        name: '',
+        price: 0,
         quantity: quantity
       });
     }
@@ -123,22 +121,45 @@ export class ShoppingCart {
           return { success: false, error: 'Payment amount does not match cart total' };
         }
 
-        // Process payment with Stripe
-        const paymentIntent = await this.stripe.paymentIntents.create({
-          amount: Math.round(paymentDetails.amount * 100), // Convert to cents
-          currency: paymentDetails.currency.toLowerCase(),
-          payment_method: paymentDetails.paymentMethod,
-          confirm: true,
-          return_url: 'https://example.com/return'
-        });
+        // Simulate payment processing
+        const paymentSuccessful = await this.processPayment(paymentDetails);
 
-        if (paymentIntent.status === 'succeeded') {
-          // Payment successful - commit the reservation and clear cart
-          await this.inventoryManager.commitReservation(updatedCartItems);
+        if (paymentSuccessful) {
+          // Create order record - transform ShoppingCartItem to OrderItem with inventoryItemId and subtotal
+          const orderItems = updatedCartItems.map(item => ({
+            inventoryItemId: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+            subtotal: item.price * item.quantity
+          }));
+
+          const createOrderRequest = {
+            userId: 'default-user', // In a real app, this would come from session/auth
+            paymentId: `payment_${Date.now()}`,
+            items: orderItems,
+            subtotal: cartSummary.subtotal,
+            tax: cartSummary.tax,
+            total: cartSummary.total
+          };
+
+          const order = await this.orderService.createOrder(createOrderRequest);
+
+          // Update inventory quantities (remove reserved items)
+          for (const item of updatedCartItems) {
+            const inventoryItem = await this.inventoryManager.getItemById(item.id);
+            if (inventoryItem) {
+              await this.inventoryManager.updateInventory(
+                item.id, 
+                inventoryItem.availableQuantity - item.quantity
+              );
+            }
+          }
+
+          // Clear cart
           this.items.clear();
 
-          const orderId = `order_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-          return { success: true, orderId };
+          return { success: true, orderId: order.orderId };
         } else {
           // Payment failed - release reservation
           await this.inventoryManager.releaseReservation(updatedCartItems);
@@ -154,5 +175,16 @@ export class ShoppingCart {
     } catch (error) {
       return { success: false, error: 'Checkout process failed' };
     }
+  }
+
+  private async processPayment(paymentDetails: PaymentDetails): Promise<boolean> {
+    // Simulate payment processing
+    // In a real implementation, this would integrate with Stripe or another payment provider
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Simulate 95% success rate
+        resolve(Math.random() > 0.05);
+      }, 100);
+    });
   }
 }

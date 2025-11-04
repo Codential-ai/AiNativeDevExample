@@ -1,6 +1,6 @@
-/**
- * InventoryBulkUploader service for importing CSV inventory data into MongoDB
- */
+// GENERATED FROM SPEC - DO NOT EDIT
+// @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
+// (spec:ac372cc8) (code:09121c24)
 
 import { parse } from 'csv-parse';
 import { InventoryItem, BulkUploadResult, BulkUploadOptions } from '../types';
@@ -48,7 +48,7 @@ export class InventoryBulkUploader {
 
           try {
             // Validate required fields
-            if (!record.id || !record.name || !record.price || record.availableQuantity === undefined) {
+            if (!record.id || !record.name || record.price === undefined || record.availableQuantity === undefined) {
               result.failureCount++;
               result.errors.push({
                 row: rowNum,
@@ -65,7 +65,7 @@ export class InventoryBulkUploader {
               result.failureCount++;
               result.errors.push({
                 row: rowNum,
-                message: 'Invalid price: must be a non-negative number'
+                message: 'Invalid price'
               });
               continue;
             }
@@ -74,7 +74,7 @@ export class InventoryBulkUploader {
               result.failureCount++;
               result.errors.push({
                 row: rowNum,
-                message: 'Invalid availableQuantity: must be a non-negative integer'
+                message: 'Invalid availableQuantity'
               });
               continue;
             }
@@ -99,7 +99,8 @@ export class InventoryBulkUploader {
                   {
                     name: inventoryItem.name,
                     price: inventoryItem.price,
-                    availableQuantity: inventoryItem.availableQuantity
+                    availableQuantity: inventoryItem.availableQuantity,
+                    updatedAt: new Date()
                   }
                 ).exec();
                 result.successCount++;

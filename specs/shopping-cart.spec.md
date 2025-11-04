@@ -73,6 +73,7 @@ Handles the checkout flow for completing purchases.
 - Reserves items during checkout process
 - Calculates final totals including taxes and fees
 - Manages checkout session state
+- Creates persistent Order record in MongoDB after successful payment
 
 ### Payment Processing
 
@@ -82,6 +83,7 @@ Processes payment transactions for completed orders.
 - Handles payment validation and authorization
 - Manages payment success and failure scenarios
 - Updates inventory after successful payment completion
+- Persists order to database with complete purchase details
 
 ### Bulk Inventory Upload
 
@@ -141,6 +143,7 @@ interface BulkUploadResult {
 }
 
 class ShoppingCart {
+  constructor(inventoryManager: InventoryManager, orderService: OrderService);
   addItem(itemId: string, quantity: number): boolean;
   removeItem(itemId: string, quantity?: number): boolean;
   getCartSummary(): CartSummary;
@@ -184,6 +187,10 @@ External payment service for handling transactions.
 
 Utility for parsing CSV data during bulk inventory imports.
 [@use](csv-parse)
+
+### Internal Services
+
+ShoppingCart integrates with OrderService to persist completed orders to MongoDB after successful checkout.
 
 ## Test Cases
 
