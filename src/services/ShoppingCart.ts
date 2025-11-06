@@ -43,6 +43,8 @@ export class ShoppingCart {
       return false;
     }
 
+    // MISSING-  checking if the item is reserved by other users! 
+
     if (existingItem) {
       existingItem.quantity = newQuantity;
       existingItem.name = inventoryItem.name;

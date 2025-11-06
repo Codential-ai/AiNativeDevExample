@@ -1,16 +1,16 @@
 ### CART-001: Cart Items Must Validate Product Existence
 
 **Definition:**
-Before adding or updating a cart item, the system must validate that the referenced product exists in the InventoryItem collection. 
+Before adding or updating a cart item, the system must validate that the referenced product exists in the InventoryItem collection in sufficient quantities. 
 
 
 **When to Apply:**
-- ✅ `ShoppingCart.addItem()` - validate before storing
+- ✅ Any method that creates, updates, or deletes an Inventory item
 - ✅ Cart save operations - validate all items before persisting
 - ✅ Cart update operations - validate all items before persisting
 
 **Rationale:**
-Prevents a number of issues that will arise as the system scales and its complexity increases. 
+Ensure the Inventory Item collection is in a consistent state with non-negative quantities. 
 
 ---
 
