@@ -19,6 +19,7 @@ export interface InventoryItem {
   name: string;
   price: number;
   availableQuantity: number;
+  reservedQuantity?: number;
   createdAt?: Date;
   updatedAt?: Date;
 }

@@ -6,6 +6,14 @@
       "args": [
         "mcp"
       ]
+    },
+    "transaction-analyzer": {
+      "type": "stdio",
+      "command": "bash",
+      "args": [
+        "-c",
+        "cd /Users/bpielech/development/AiNativeDevExample && pnpm exec tsx mcp/transaction-analyzer.ts"
+      ]
     }
   }
 }

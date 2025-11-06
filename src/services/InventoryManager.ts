@@ -10,13 +10,16 @@ import { ShoppingCartItem, InventoryItem } from '../types';
 import { InventoryItemModel } from '../models/InventoryItem';
 
 export class InventoryManager {
-  private reservations: Map<string, number> = new Map();
 
+  /**
+   * Highly simplified method to find available items, in a real system, there would be a lot more business logic to determine availability
+   * @returns 
+   */
   async getAvailableItems(): Promise<InventoryItem[]> {
     const items = await InventoryItemModel.find({}).exec();
     return items.map(item => {
       const obj = item.toObject() as unknown as InventoryItem;
-      const reserved = this.reservations.get(obj.id) || 0;
+      const reserved = obj.reservedQuantity || 0;
       return {
         ...obj,
         availableQuantity: obj.availableQuantity - reserved
@@ -25,10 +28,11 @@ export class InventoryManager {
   }
 
   async getItemById(itemId: string): Promise<InventoryItem | null> {
-    const item = await InventoryItemModel.findOne({ id: itemId }).exec();
+    // inefficient because it returns a full Mongoose document and then later converts it to a plain object. 
+    const item = await InventoryItemModel.findOne({ id: itemId }).exec();  
     if (!item) return null;
     const obj = item.toObject() as unknown as InventoryItem;
-    const reserved = this.reservations.get(itemId) || 0;
+    const reserved = obj.reservedQuantity || 0;
     return {
       ...obj,
       availableQuantity: obj.availableQuantity - reserved
@@ -50,32 +54,35 @@ export class InventoryManager {
 
   async reserveItems(items: ShoppingCartItem[]): Promise<boolean> {
     try {
+      //❌ NOT IN A TRANSACTION - VULNERABLE TO RACE CONDITIONS
       for (const cartItem of items) {
         const inventoryItem = await InventoryItemModel.findOne({ id: cartItem.id }).exec();
         if (!inventoryItem) return false;
-        const currentReserved = this.reservations.get(cartItem.id) || 0;
+        const currentReserved = inventoryItem.reservedQuantity || 0;
         const available = inventoryItem.availableQuantity - currentReserved;
         if (available < cartItem.quantity) return false;
-      }
-      for (const cartItem of items) {
-        const currentReserved = this.reservations.get(cartItem.id) || 0;
-        this.reservations.set(cartItem.id, currentReserved + cartItem.quantity);
+        await InventoryItemModel.updateOne(
+          { id: cartItem.id },
+          { reservedQuantity: currentReserved + cartItem.quantity }
+        ).exec();
       }
       return true;
     } catch {
+      //❌ No releasing of reservations on an error means we will have orphaned reservations if the operation fails
       return false;
     }
   }
 
   async releaseReservation(items: ShoppingCartItem[]): Promise<void> {
     for (const cartItem of items) {
-      const currentReserved = this.reservations.get(cartItem.id) || 0;
+      const inventoryItem = await InventoryItemModel.findOne({ id: cartItem.id }).exec();
+      if (!inventoryItem) continue;
+      const currentReserved = inventoryItem.reservedQuantity || 0;
       const newReserved = Math.max(0, currentReserved - cartItem.quantity);
-      if (newReserved > 0) {
-        this.reservations.set(cartItem.id, newReserved);
-      } else {
-        this.reservations.delete(cartItem.id);
-      }
+      await InventoryItemModel.updateOne(
+        { id: cartItem.id },
+        { reservedQuantity: newReserved }
+      ).exec();
     }
   }
 
@@ -83,13 +90,24 @@ export class InventoryManager {
     const items = await InventoryItemModel.find({
       name: { $regex: query, $options: 'i' }
     }).exec();
-    
+
     return items.map(item => {
       const obj = item.toObject() as unknown as InventoryItem;
-      const reserved = this.reservations.get(obj.id) || 0;
+      const reserved = obj.reservedQuantity || 0;
       return {
         ...obj,
         availableQuantity: obj.availableQuantity - reserved
+      };
+    });
+  }
+
+  async getItemsBelowPrice(maxPrice: number): Promise<InventoryItem[]> {
+    const items = await InventoryItemModel.find({ price: { $lt: maxPrice } }).lean().exec();
+    return items.map(item => {
+      const reserved = item.reservedQuantity || 0;
+      return {
+        ...(item as unknown as InventoryItem),
+        availableQuantity: item.availableQuantity - reserved
       };
     });
   }

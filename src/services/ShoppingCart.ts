@@ -119,6 +119,7 @@ export class ShoppingCart {
       }
 
       // Reserve items during checkout
+      
       if (!await this.inventoryManager.reserveItems(updatedCartItems)) {
         return { success: false, error: 'Unable to reserve items for checkout' };
       }
@@ -133,6 +134,7 @@ export class ShoppingCart {
         }
 
         // Simulate payment processing
+        
         const paymentSuccessful = await this.processPayment(paymentDetails);
 
         if (paymentSuccessful) {

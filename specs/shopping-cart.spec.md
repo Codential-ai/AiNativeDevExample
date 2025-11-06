@@ -65,6 +65,7 @@ Manages the backend inventory of available items, persisted to MongoDB via Mongo
 - Handles inventory restocking and item management [@test](../test/shopping-cart.test.ts)
 - Prevents overselling by checking available quantities [@test](../test/shopping-cart.test.ts)
 - Provides Mongoose schema and model for InventoryItem documents [@test](../test/shopping-cart.test.ts)
+- Allows filtering items by price to find budget-friendly inventory [@test](../test/shopping-cart.test.ts)
 
 ### Checkout Process
 
@@ -155,6 +156,7 @@ class InventoryManager {
   // Query operations
   getAvailableItems(): Promise<InventoryItem[]>;
   getItemById(itemId: string): Promise<InventoryItem | null>;
+  getItemsBelowPrice(maxPrice: number): Promise<InventoryItem[]>;
 
   // Inventory updates
   updateInventory(itemId: string, quantity: number): Promise<boolean>;

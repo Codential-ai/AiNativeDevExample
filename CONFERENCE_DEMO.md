@@ -20,573 +20,62 @@ Each invariant is presented as:
 
 ## Opening Statement (30 seconds)
 
-> "When we generate code from specs without invariants, we ship bugs that are incredibly hard to catch in testing. Let me show you how these 3 issues show up in this shopping cart application, and how invariants help us prevent them going forward. I generated this app using Claude Code with the Tessl Spec Registry to help Claude understand how to best use Mongoose. It is a NodeJS/Mongoose/Typescript application with a simple shopping cart that allows users to search for items, add items to their cart, and checkout. Claude helpfully generated a full set of unit tests for us, but as Jennifer mentioned, we know there are at least 3 untestable bugs lurking in the code.  
+> "Thanks Jennifer.  I am going to walk you through how it to add Invariants into your agent workflow to address the 3 types of issues Jennifer mentioned.  For this demo, I generated a simple shopping cart app using Claude Code with the Tessl Spec Registry to help Claude understand how to best use Mongoose. It is a NodeJS/Mongoose/Typescript application with an express API that allows users to search for items, add items to their cart, and checkout. Claude helpfully generated a full set of unit tests for us so there is 100% code coverage, but as we know there are at least 3 untestable bugs lurking in the code.  
 
-For each bug, I will show you how to structure an invariant at the right scope and then 3 techniques to enforce or verify the implementation.  There are absolutely different approaches to verify each invariant and my focus is on showing a variety of techniques to help showcase the power of the approach.  The best enforcement approach highly depends on your available time and the priority of the invariant. For example, Business critical invariants will require a higher level of verification whereas best-practices related invariants can be enforced at a lower level.   
+For each bug, I will show you how to structure an invariant at the right scope and then a technique to enforce or verify the implementation.  There are absolutely different approaches to verify each invariant and my focus is on showing a variety of techniques to help showcase the power of the approach.  The best enforcement approach highly depends on your available time and the priority of the invariant. For example, Business critical invariants will require a higher level of verification whereas best-practices related invariants can be enforced at a lower level.   
 "
 
 ---
 
-# Demo 1: Race Conditions → Transactions (2 minutes)
 
-## The Scenario (20 seconds)
+**Presenter Note:** In the first scenario, Too Hard to Test, the two users are trying to buy the last item in stock simultaneously and based on how threads execute, we could end up double selling the item.  This is a typical race condition caused by the agent not applying any transactions boundaries or rollbacks.  This issue applies universally, across this project and any other project we may work on, so we want to ensure this is addressed in all of our projects.    Here's the sample code helpfully generated for us by Claude Code that shows the issue. 
 
-Show a generated unit test that fail
+<show the race condition briefly>
 
-**Timing Breakdown:**
-- Setup: 10 sec
-- Problem: 10 sec
+I placed this INVARIANT.md file in my claude home directory so it is available by default.  Let's take a look at how the invariant is defined and how to use it: 
 
-```
-Payment failure after the item quantity has already been deprecated --> stock is now off.   
-```
+<show the invariant file> 
 
-**Presenter Note:** Here's a scenario where multiple users are looking to buy a high-demand item during a black Friday sale.  While the system is processing the payment for User A, User B looks to buy the same item.  To be ACID compliant while also supporting a high scale, we need to make sure we build in proper rollback logic. This applies universally, across this project and any other project.    Here's the sample code that shows the issue. 
+The invariant is comprised of several parts.  A brief definition, details on when to apply it, why it is important, an example of the problem, what a solution looks like,  and most importantly, how to verify the invariant.  
 
----
+In this example, we instruct the agent to leverage the provided MCP tool to check each method for its transaction safety and from there, the agent or the user can make the necessary changes to address any issues. For an invariant as critical as this, we want to ensure we are not relying on the non-deterministic nature of the agent to correctly determine when we need transactions.    
 
-## Before: The Vulnerable Code (25 seconds)
+<show the claude code prompt>
 
-**File Location:** `src/services/ShoppingCart.ts` lines 146-157
+Now let's look at how the agent is prompted to check for violations of the invariant. In a real-world scenario, this would happen in the flow of development or be tied into the CI/CD pipeline. Notice how it invokes the transaction-analyzer MCP tool to identify 3 violations, it also found 3 methods that are unaffected. It then created a plan to fix the issues based on the feedback from the tool. 
 
-```typescript
-// ❌ NOT IN A TRANSACTION - VULNERABLE TO RACE CONDITIONS
+Let's move onto the second scenario- memory inefficient code, aka Too Expensive to Test. This is a common issue with agentic code generation where the code where the impact of the miss may not be felt till much later on in the software's lifecycle.  But by leveraging an invariant up front, we can ensure the agent generates code that is more efficient from the start. 
 
-async checkout(paymentDetails: PaymentDetails): Promise<CheckoutResult> {
-  try {
-    // ... validation code ...
+<show getItemById code>
+In this example, let's look at how getItemByID is implemented.  Notice it exec's the query and then later calls toObject() to convert it to a JSON object.  This pattern is unfortunately too common and it results in memory overhead as the object maintains a lot of overhead that is not needed.  It is very easy for agents and developers to forget to use .lean() when they require the plain object.  
 
-    // CREATE ORDER
-    const order = await this.orderService.createOrder(createOrderRequest);
+This is no at the same level of criticality as the transaction invariant.  It is more of a best practice, so let's create an invariant that will nudge the agent to do the right thing for all uses of Mongo in our project. 
 
-    // [RACE CONDITION WINDOW - Another request could happen here]
+<show the invariant file>
 
-    // UPDATE INVENTORY - Multiple separate operations
-    for (const item of updatedCartItems) {
-      const inventoryItem = await this.inventoryManager.getItemById(item.id);
-      if (inventoryItem) {
-        await this.inventoryManager.updateInventory(
-          item.id,
-          inventoryItem.availableQuantity - item.quantity
-        );
-      }
-    }
+This invariant is structured the same way as the previous one. At the bottom, we provide clear instructions on how to check for this and what to do. 
 
-    return { success: true, orderId: order.orderId };
-  } catch (error) {
-    return { success: false, error: 'Checkout failed' };
-  }
-}
-```
+<show claude code prompt>
 
-**Presenter Note:** Highlight the separate `createOrder()` and `updateInventory()` calls. They're not atomic. 
+Now let's see how the agent examined the code and found the violations through simple code review.  We then prompted to agent to add a new search method - getItemsBelowPrice, and note how this was generated with the correct use of .lean().
 
----
+<show Iventory Manager.getItemsBelowPrice at the bottom of the file>
 
-## The Invariant (20 seconds)
 
-### INV-001: All Destructive Operations Must Be Wrapped in Transactions
+The final demo is The Too Complex To Test issue, aka combinatorial state explosion, aka where I'd venture 95% of the successful systems we have built end up at some point in their lifetimes. There are just too many different scenarios to cover in the unit tests, so we need to find a way to provide a backstop for the agent to ensure we catch the outcomes we need to cover.  This level of Invariant is scoped to the individual module rather than the entire project. 
 
-**Definition:**
-Multi-document operations (create + update, or multiple updates across documents) must be wrapped in MongoDB transactions to prevent race conditions.
+<show Inventory Manager.getAvailableItems, at the top of the file>
+Let's consider the simple sounding method getAvailableItems in Inventory Manager.  This is quite a naive implementation, that doesn't take into account time-based reservations, incoming stock, future orders, etc. We know those are coming and we know it will be hard to test all the scenarios. And being a shopping cart system, we absolutely have to get this inventory tracking right.   So let's make an invariant to ensure any updates or saves to the InventoryItem schema leave the data in a consistent state.  This won't eliminate needing to test (or ideally create invariants) for all the different scenarios, but it helps get us started.
 
-**When to Apply:**
-- ✅ Any exported method that performs one or more Mongoose mutations (create, update, delete, updateOne, updateMany, deleteOne, deleteMany, etc.)
-- ✅ Any exported method that calls other service methods performing mutations
-- ✅ Any exported method orchestrating multiple operations across documents
-- ❌ Read-only queries and fetch operations
-- ❌ Exported methods that only perform single-document operations without risk of concurrent conflicts
+<Show the Invariant>
+This is similar to the first two examples.  It describes how to build pre-update and pre-save hooks to our Cart and InventoryItem schemas to check item validity.  This seems like a one-off requirement to implement as an invariant, but with this approach, it ensures any future models in this Module will comply with this Invariant. 
 
-**Rationale:**
-Two concurrent requests must not both succeed if they would violate business logic. With transactions, MongoDB guarantees all-or-nothing atomicity.
+<Show Claude Code>
 
-** Example:**
-```typescript
-// ❌ INCORRECT - Multiple mutations without transaction
-async exportedMethodName(parameters): Promise<ResultType> {
-  try {
-    // First mutation operation
-    const result1 = await this.collection1.create(data);
-    
-    // Second mutation operation (vulnerable window here!)
-    const result2 = await this.collection2.updateOne({ id: x }, { $set: data });
-    
-    return result1;
-  } catch (error) {
-    return handleError(error);
-  }
-}
+Look at how the agent examind the code and identified a violation in the methods that manipulate Inventory Items.  The agent then suggested the pre and post hooks to add and any future dev will be checked for compliance.  
 
-// ✅ CORRECT - Wrap mutations in transaction
-async exportedMethodName(parameters): Promise<ResultType> {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-  
-  try {
-    // First mutation operation - pass session
-    const result1 = await this.collection1.create([data], { session });
-    
-    // Second mutation operation - pass session
-    const result2 = await this.collection2.updateOne({ id: x }, { $set: data }, { session });
-    
-    await session.commitTransaction();
-    return result1;
-  } catch (error) {
-    await session.abortTransaction();
-    return handleError(error);
-  } finally {
-    session.endSession();
-  }
-}
-```
----
 
+And that is 3 different techniques- MCP, code review, and code generation, to implement Invariants into your agent workflow to address the 3 types of issues Jennifer mentioned. I also walked through how to create the invariants at the right scope- universal, project-wide, and module wide.  
 
-## MCP Tool Output (15 seconds)
+I will now turn it over to Jennifer to wrap things up. 
 
-**Show this as a screenshot or transcript:**
-
-```bash
-/check-transactions
-
-BEFORE:
-❌ src/services/ShoppingCart.ts:31 - addItem() performs mutations (inventoryManager.getItemById + items.set) without transaction
-❌ src/services/ShoppingCart.ts:62 - removeItem() performs mutations (items.delete/update) without transaction
-❌ src/services/ShoppingCart.ts:89 - checkout() performs multiple mutations without transaction:
-   - orderService.createOrder() at line 157
-   - inventoryManager.updateInventory() at lines 163-166
-   - items.clear() at line 171
-
-3 violations found
-
-AFTER APPLYING FIXES:
-/check-transactions
-
-✅ No violations found!
-
-## After: Transaction-Safe Code (30 seconds)
-
-**Same file, now wrapped in transaction:**
-
-```typescript
-// ✅ WRAPPED IN TRANSACTION - RACE CONDITION SAFE
-
-async checkout(paymentDetails: PaymentDetails): Promise<CheckoutResult> {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    // ... validation code ...
-
-    // ALL OPERATIONS NOW USE THE SESSION
-    const order = await this.orderService.createOrder(
-      createOrderRequest,
-      { session }  // ← Pass session
-    );
-
-    // UPDATE INVENTORY - ALL IN SAME TRANSACTION
-    for (const item of updatedCartItems) {
-      const inventoryItem = await this.inventoryManager.getItemById(
-        item.id,
-        { session }  // ← Pass session
-      );
-      if (inventoryItem) {
-        await this.inventoryManager.updateInventory(
-          item.id,
-          inventoryItem.availableQuantity - item.quantity,
-          { session }  // ← Pass session
-        );
-      }
-    }
-
-    // COMMIT ATOMICALLY
-    await session.commitTransaction();
-    return { success: true, orderId: order.orderId };
-
-  } catch (error) {
-    // ROLLBACK IF ANYTHING FAILS
-    await session.abortTransaction();
-    return { success: false, error: 'Checkout failed' };
-  } finally {
-    await session.endSession();
-  }
-}
-```
-
-**What Changed:**
-1. Create session at start: `startSession()`
-2. Begin transaction: `startTransaction()`
-3. Pass `{ session }` to ALL database operations
-4. Success path: `commitTransaction()` (atomic success)
-5. Error path: `abortTransaction()` (atomic rollback)
-
-**Presenter Note:** For this invariant, we will incorporate this language into a universal context file that is picked up by any agent for any project. Notice how when Claude Code was prompted to enforce the universal invariant, it correctly used the MCP tool to determine which methods needed the transaction wrappers. 
-
----
-
-## Result (15 seconds)
-
-**Before:** Sometimes both users succeed, sometimes only one user succeeds, and sometimes the entire transaction fails. 🔴
-
-**After:** Only one user succeeds, other gets "Unable to reserve items" error ✅
-
-**Key Benefit:** Impossible to double-sell. Inventory integrity guaranteed.
-
----
-
----
-
-# Demo 2: Memory Waste → .lean() (2 minutes)
-
-## The Scenario (20 seconds)
-
-**Timing Breakdown:**
-- Setup: 10 sec
-- Problem: 10 sec
-
-```
-When we fetch orders for display, Mongoose returns full documents
-with schema metadata, getters/setters, change tracking, and methods.
-
-Then we immediately convert them to plain objects.
-
-That metadata is 50%+ overhead we didn't need.
-
-Scale: 10,000 orders = 8KB each = 80MB
-       With .lean(): 4KB each = 40MB
-       Savings: 40MB+ per query ⚡
-```
-
-**Presenter Note:** Mention that this isn't just about memory—it's also about speed. No hydration = instant return.  This is a Mongoose best practice applicable across this entire project.  Imagine a similar invariant for a project that uses a different storage layer or ORM. 
-
----
-
-## Before: The Wasteful Code (25 seconds)
-
-**File Location:** `src/services/OrderService.ts` lines 33-54
-
-```typescript
-// ❌ WASTEFUL - Returns full Mongoose documents for display
-
-async getOrderById(orderId: string): Promise<Order | null> {
-  const order = await OrderModel.findOne({ orderId }).exec();
-  //                                                    ↑
-  //                    Returns: Full Mongoose document (8KB)
-  //                    Includes: _doc, __v, schema, $__, methods...
-
-  return order ? (order.toObject() as unknown as Order) : null;
-  //             ↑ Convert to plain object
-  //             (We just wasted the overhead we fetched!)
-}
-
-async getUserOrders(userId: string): Promise<Order[]> {
-  const orders = await OrderModel.find({ userId })
-    .sort({ createdAt: -1 })
-    .exec();
-  //  ↑ Full documents again
-
-  return orders.map(order => order.toObject() as unknown as Order);
-  //                                ↑ Converting again
-  //                                (Wasted overhead again!)
-}
-
-async getOrderByPaymentId(paymentId: string): Promise<Order | null> {
-  const order = await OrderModel.findOne({ paymentId }).exec();
-  return order ? (order.toObject() as unknown as Order) : null;
-}
-```
-
-**Other Violations:**
-- `InventoryManager.getAvailableItems()` line 16 - no `.lean()`
-- `InventoryManager.getItemById()` line 28 - no `.lean()`
-- `InventoryManager.reserveItems()` line 54 - no `.lean()` (reads for validation)
-- `InventoryBulkUploader.bulkUploadFromCsv()` line 90 - no `.lean()` (duplicate check)
-
-**Presenter Note:** Point out pattern—every method calls `.toObject()`. If we used `.lean()`, we wouldn't need it.
-
----
-
-## The Invariant (20 seconds)
-
-### PROJ-001: All Read-Only Cart Queries Must Use .lean()
-
-**Definition:**
-Mongoose queries that only READ data (no modifications) must chain `.lean()` before `.exec()` to return plain JavaScript objects instead of full Mongoose documents.
-
-**When to Apply:**
-- ✅ `getOrderById()` - only reads
-- ✅ `getUserOrders()` - only reads
-- ✅ `getAvailableItems()` - only reads
-- ✅ `getItemById()` - only reads (for validation)
-- ✅ `bulkUploadFromCsv()` - reads for duplicate check
-- ❌ `createOrder()` - needs full document for `.save()`
-- ❌ Any operation that calls `.save()` after fetch
-
-**Rationale:**
-For display/read-only operations, plain objects are sufficient and 50%+ faster. Mongoose overhead is wasted.
-
-** Example:**
-```typescript
-// ❌ INCORRECT - Returns full Mongoose document
-const order = await OrderModel.findOne({ orderId }).exec();
-return order ? (order.toObject() as unknown as Order) : null;
-
-// ✅ CORRECT - Returns plain object
-const order = await OrderModel.findOne({ orderId }).lean().exec();
-return order as Order | null;
-
----
-
-## After: Optimized Code (30 seconds)
-
-**Same methods, now with .lean():**
-
-```typescript
-// ✅ OPTIMIZED - Returns plain objects for display
-
-async getOrderById(orderId: string): Promise<Order | null> {
-  const order = await OrderModel.findOne({ orderId })
-    .lean()  // ← ONE WORD FIX
-    .exec();
-
-  return order as Order | null;
-  // ↑ Already plain object, no conversion needed!
-}
-
-async getUserOrders(userId: string): Promise<Order[]> {
-  const orders = await OrderModel.find({ userId })
-    .sort({ createdAt: -1 })
-    .lean()  // ← ONE WORD FIX
-    .exec();
-
-  return orders as Order[];
-  // ↑ Already plain objects!
-}
-
-async getOrderByPaymentId(paymentId: string): Promise<Order | null> {
-  const order = await OrderModel.findOne({ paymentId })
-    .lean()  // ← ONE WORD FIX
-    .exec();
-
-  return order as Order | null;
-}
-```
-
-**Presenter Note:** Because this invariant is a best-practice, we will apply it via a prompt to the agent and trust the agent to apply .lean() correctly.  We can always extend the static analysis from the prior example to check this. 
-
-
----
-
-# Demo 3: Orphaned References → Product Validation (1.5 minutes)
-
-## The Scenario (20 seconds)
-
-**Timing Breakdown:**
-- Setup: 10 sec
-- Problem: 10 sec
-
-```
-User adds a product to their cart. 
-There is 1 item in stock, several reserved for other orders (which may not be fulfilled), and several more in transit. 
-After deliberating for some time, the quantities have changed and the product is no longer available. 
-At checkout, the user is still able to order the item because testing missed this scenario. 
-```
-
-**Presenter Note:** There is complicated business logic at play here.  The existing unit tests missed this scenario because they didn't properly account for the combination of user behavior + inventory. 
-
----
-
-## Before: No Validation on Add (25 seconds)
-
-**File Location:** `src/services/ShoppingCart.ts` lines 31-49
-
-```typescript
-// ❌ NO VALIDATION - Accepts non-existent products
-
-addItem(itemId: string, quantity: number): boolean {
-  if (quantity <= 0) return false;
-
-  const existingItem = this.items.get(itemId);
-
-  if (existingItem) {
-    existingItem.quantity += quantity;
-  } else {
-    // ❌ PROBLEM: No check that product exists!
-    this.items.set(itemId, {
-      id: itemId,
-      name: '',          // ← Empty, we don't know the product
-      price: 0,          // ← Zero
-      quantity: quantity
-    });
-  }
-
-  return true; // ← Always returns true, even for fake products!
-}
-```
-
-**Problem Scenario:**
-```typescript
-describe('Inventory Race Condition with Reservations', () => {
-  it('❌ FAILS - addItem does not account for reservations or abandoned carts', async () => {
-    // Setup: Product X has 5 units, but 3 reserved, 2 in transit
-    await InventoryItemModel.create({
-      id: 'product-x',
-      name: 'Widget',
-      price: 29.99,
-      availableQuantity: 5  // ← Only raw number, doesn't know about reservations
-    });
-
-    // User A adds 2 units to cart
-    const cartA = new ShoppingCart(inventoryManager, orderService);
-    expect(await cartA.addItem('product-x', 2)).toBe(true);  // ✅ Succeeds
-
-    // User B adds 4 units to cart
-    const cartB = new ShoppingCart(inventoryManager, orderService);
-    expect(await cartB.addItem('product-x', 4)).toBe(true);  // ✅ Succeeds
-
-    // User A abandons cart at 14:10 - but no cleanup of reservation!
-    // cartA reservation for 2 units is never released
-
-    // User B checks out at 14:15 - creates order for 4 units
-    const resultB = await cartB.checkout(paymentDetails);
-    expect(resultB.success).toBe(true);  // ✅ Order created
-
-    // User A comes back at 14:25 and checks out for 2 units
-    const resultA = await cartA.checkout(paymentDetails);
-    
-    // ❌ PROBLEM: This succeeds when it shouldn't!
-    // System sold 6 units from inventory of 5 (+ 2 in transit)
-    // Abandoned cart reservation was never cleaned up
-    expect(resultA.success).toBe(false);  // ← But test shows it's true!
-  });
-});
-```
-
-**Presenter Note:** Point out that `addItem()` doesn't consider reservations, abandoned carts, or incoming stock. It only checks the `availableQuantity` field, which doesn't tell the full story of what inventory is actually available.
-
----
-
-## The Invariant (20 seconds)
-
-### CART-001: Cart Items Must Validate Product Existence
-
-**Definition:**
-Cart operations must validate that referenced products exist in the InventoryItem collection BEFORE storing them. Additionally, database-level hooks validate on save/update in case products are deleted after adding.
-
-**When to Apply:**
-- ✅ `ShoppingCart.addItem()` - validate before storing
-- ✅ Cart save operations - validate all items before persisting
-- ✅ Cart update operations - validate all items before persisting
-- ✅ (Bonus) Product delete - optionally clean up affected carts
-
-**Rationale:**
-Prevents a number of issues that will arise as the system scales and its complexity increases. 
-
----
-
-## After: With Validation (30 seconds)
-
-
-### Pre-Save Hook (Defensive Layer)
-
-**New or Updated:** `src/models/ShoppingCart.ts` (or wherever cart schema lives)
-
-```typescript
-// ✅ DATABASE-LEVEL VALIDATION
-
-const cartSchema = new Schema({
-  userId: String,
-  items: [{
-    itemId: String,
-    quantity: Number,
-    name: String,
-    price: Number
-  }]
-});
-
-// Validate on save
-cartSchema.pre('save', async function(next) {
-  // ✅ Validate all items reference existing products
-  for (const item of this.items || []) {
-    const exists = await InventoryItemModel.exists({ id: item.itemId });
-    if (!exists) {
-      throw new Error(`Product ${item.itemId} was deleted`);
-    }
-  }
-  next();
-});
-
-// Validate on update
-cartSchema.pre('updateOne', async function(next) {
-  // ✅ Validate all items on update too
-  const data = this.getUpdate();
-  if (data.$set?.items) {
-    for (const item of data.$set.items) {
-      const exists = await InventoryItemModel.exists({ id: item.itemId });
-      if (!exists) {
-        throw new Error(`Product ${item.itemId} no longer exists`);
-      }
-    }
-  }
-  next();
-});
-```
-
-**Presenter Note:** I intentionally omitted building out the addItem method for brevity-  there is a lot of business logic to be added to the spec.  But instead I focused on how to have the agent build in validation to the code as a backstop to all of the other potential scenarios. Now as we build the system out, we can rely on this code to trigger errors during checkout and avoid worse scenarios such as being unable to sell the items we have. 
-
-
----
-
-# Closing Statement (30 seconds)
-
-## Summary
-
-| Invariant | Problem | Solution | Benefit |
-|-----------|---------|----------|---------|
-| **INV-001: Transactions** | Race conditions (double-sell) | Wrap multi-doc ops in sessions | Inventory integrity guaranteed |
-| **PROJ-001: .lean()** | Memory waste (50%+) | Add `.lean()` to read-only queries | Performance scales correctly |
-| **CART-001: Product Validation** | Orphaned references | Validate on add + pre-save hooks | Better UX + data integrity |
-
-## The Big Idea
-
-> "Invariants let us bake best practices into the spec-driven development process. Instead of discovering these bugs in production, we catch them during code generation. Claude Code helps us apply and verify them efficiently."
-
-## Scaling
-
-- ✅ Invariants live in `CLAUDE.md` instructions
-- ✅ Passed to Tessl during code generation (in context)
-- ✅ MCP tools verify compliance automatically
-- ✅ Feature-specific, project-wide, and universal rules
-- ✅ Works with existing spec-driven workflow
-
----
-
----
-
-# Presenter Notes & Timing
-
-## Overall Timing Breakdown
-
-- **Opening**: 30 sec (introduce concept)
-- **Demo 1 (Transactions)**: 2 min
-  - Scenario: 20 sec
-  - Before code: 25 sec
-  - Invariant: 20 sec
-  - After code: 30 sec
-  - Result: 15 sec
-- **Demo 2 (.lean)**: 2 min
-  - Scenario: 20 sec
-  - Before code: 25 sec
-  - Invariant: 20 sec
-  - After code: 30 sec
-  - MCP tool output: 15 sec
-- **Demo 3 (Product Validation)**: 1.5 min
-  - Scenario: 20 sec
-  - Before code: 25 sec
-  - Invariant: 20 sec
-  - After code: 30 sec
-  - Test behavior: 10 sec
-- **Closing**: 30 sec
-- **Buffer**: 30 sec
-
-**Total: 7 minutes exactly**
