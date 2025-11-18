@@ -1,6 +1,3 @@
-// GENERATED FROM SPEC - DO NOT EDIT
-// @generated with Tessl v0.28.0 from ../specs/shopping-cart.spec.md
-// (spec:d0ce8ada) (code:b8452c40)
 
 // Mock uuid first before any imports that use it
 let uuidCounter = 0;

@@ -1,6 +1,3 @@
-// GENERATED FROM SPEC - DO NOT EDIT
-// @generated with Tessl v0.28.0 from ../../specs/orders.spec.md
-// (spec:d181ac47) (code:dae34514)
 
 import { Order } from '../types/orders';
 import { CreateOrderRequest } from '../types/orders';

@@ -1,6 +1,3 @@
-// GENERATED FROM SPEC - DO NOT EDIT
-// @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
-// (spec:968ddcf7) (code:599d6a5d)
 
 /**
  * InventoryManager service for managing inventory items in MongoDB

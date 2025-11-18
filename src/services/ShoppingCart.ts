@@ -1,7 +1,3 @@
-// GENERATED FROM SPEC - DO NOT EDIT
-// @generated with Tessl v0.28.0 from ../../specs/shopping-cart.spec.md
-// (spec:968ddcf7) (code:30337aaf)
-
 /**
  * ShoppingCart service for managing customer shopping carts and checkout
  */

@@ -1,6 +1,3 @@
-// GENERATED FROM SPEC - DO NOT EDIT
-// @generated with Tessl v0.28.0 from ../../specs/orders.spec.md
-// (spec:d181ac47) (code:eaca31a7)
 
 export interface OrderItem {
   inventoryItemId: string;

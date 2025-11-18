@@ -1,8 +1,0 @@
-{
-  "name": "tessl-specs",
-  "dependencies": {
-    "tessl/npm-mongoose": {
-      "version": "8.18.0"
-    }
-  }
-}

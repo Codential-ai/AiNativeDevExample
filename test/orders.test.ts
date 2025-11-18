@@ -1,6 +1,3 @@
-// GENERATED FROM SPEC - DO NOT EDIT
-// @generated with Tessl v0.28.0 from ../specs/orders.spec.md
-// (spec:d181ac47) (code:c4b92d93)
 
 import { v4 as uuidv4 } from 'uuid';
 import { Order, OrderItem, CreateOrderRequest } from '../src/types/orders';
