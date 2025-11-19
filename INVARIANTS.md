@@ -26,4 +26,4 @@ return order as Order | null;
   When reviewing, editing, or writing code that leverages Mongoose, if the query is read-only, it MUST be chained with .lean() before .exec(). If it is not, then modify the code to chain .lean() before .exec().
 
 **_Remediation:_**
-  - Agent:  rewrite the query to chain .lean() before .exec() in any method that violates this invariant.
+Agent:  rewrite the query to chain .lean() before .exec() in any method that violates this invariant.
