@@ -198,4 +198,4 @@ The project includes a custom MCP tool for transaction analysis:
 
 ## Further Reading
 
-- `AGENT.md` - Application overview for Claude Code context
+- `AGENTS.md` - Application overview for all agents context
