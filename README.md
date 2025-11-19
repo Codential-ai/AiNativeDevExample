@@ -45,16 +45,10 @@ The API will start on `http://localhost:3000` with the following endpoints:
 
 ### Setting Up Your AI Agent
 
-To follow along with this demo, set up your preferred coding agent (Claude Code, Cursor, or similar). We've provided a `CLAUDE.md` file with context about the application structure and its purpose.
+To follow along with this demo, set up your preferred coding agent (Claude Code, Cursor, or similar). We've provided a `AGENTS.md` file with context about the application structure and its purpose.
 
-**If using Claude Code:**
-- The `CLAUDE.md` will be picked up automatically as project context
 - It includes application overview, architecture, and pointer to the three bug scenarios
 
-**If using another agent:**
-- Copy the contents of `CLAUDE.md` into your agent's project context or system prompt
-- This ensures the agent has the necessary context about the application
-- You can also reference specific sections as needed
 
 The application is designed to demonstrate how agents generate code with invariants in mind, catching bugs that would otherwise slip through perfect test coverage.
 
@@ -78,7 +72,7 @@ async reserveItems(items: ShoppingCartItem[]): Promise<boolean> {
 }
 ```
 
-**Invariant Approach:** Use the MCP `transaction-analyzer` tool to validate all database operations are wrapped in transactions.
+**Invariant Approach:** Use the MCP `transaction-analyzer` tool to validate all database operations are wrapped in transactions. The MCP tool is a simplistic regex checker meant to demonstrate the concept of using an MCP tool to validate this type of invariant rather than a full-fledged transaction analyzer.
 
 ---
 
@@ -96,7 +90,7 @@ async getItemById(itemId: string): Promise<InventoryItem | null> {
 }
 ```
 
-**Invariant Approach:** Code review to ensure `.lean()` is used for all queries returning plain objects.
+**Invariant Approach:** Code review to ensure `.lean()` is used for all queries returning plain objects, which makes for more memory efficient read-only Mongoose queries. In the demo, the agent is prompted to review the existing code and identify violations.  It then creates a new method - getItemsBelowPrice - that uses the correct use of .lean() to return a plain object, showing adherence to the invariant for new code.
 
 ---
 
@@ -105,21 +99,21 @@ async getItemById(itemId: string): Promise<InventoryItem | null> {
 
 **Problem:** Multiple validations in cart operations create combinatorial complexity. It's impossible to test all state combinations (item exists, quantity sufficient, reserved by others, etc.).
 
-**Invariant Approach:** Add pre-update and pre-save hooks to Mongoose schemas to enforce consistency invariants at the database layer.
+**Invariant Approach:** Add pre-update and pre-save hooks to Mongoose schemas to enforce consistency invariants at the database layer. This invariant intentionally does NOT cover all of the combinations of state, but rather ensures that the system remains in a consistent state when the cart is updated or saved regardless of the use case.  This is intended to show a different approach to ensuring consistency rather than trying to cover all possible scenarios, which is beyond the scope of this demo.
 
 ---
 
 ## Invariant Files
 
-Invariant definitions are placed in the Claude home directory (`.claude/invariants/`) and project directories:
+Invariant definitions are provided at 3 different scopes in the project:
 
 ### Universal Scope (Global)
-- **Location:** `~/.claude/invariants/transaction-safety.md`
+- **Location:** `./INVARIANTS global.md` (move this to the appropriate location in your home directory for your agents)
 - **Applies to:** All projects
 - **Scope:** Critical database transaction handling
 
 ### Project Scope
-- **Location:** `./invariants/` (root of project)
+- **Location:** `./INVARIANTS.md` (root of project)
 - **Applies to:** All Mongoose usage in this project
 - **Scope:** Best practices like `.lean()` usage
 
@@ -189,30 +183,11 @@ The project includes a custom MCP tool for transaction analysis:
 ├── scripts/
 │   ├── start-server.ts                # Server startup
 │   └── upload-inventory.ts            # Bulk upload script
-└── CONFERENCE_DEMO.md                 # Full demo script with timing
 
 ```
 
-## Running the Demo
 
-See `CONFERENCE_DEMO.md` for the full conference presentation script with timing and exact code locations to reference.
 
-### Demo Walkthrough
-
-1. **Show the Issue:** Highlight the race condition in `InventoryManager.reserveItems`
-2. **Run Invariant Check:** Use Claude Code with the transaction-analyzer tool
-3. **Review Code:** Show the inefficient Mongoose query pattern
-4. **Generate Fix:** Prompt Claude Code to add `.lean()` optimization
-5. **Validate:** Show that new generated code follows the invariant
-
-## Technology Stack
-
-- **Runtime:** TypeScript + Node.js
-- **Framework:** Express.js
-- **Database:** MongoDB + Mongoose ODM
-- **Testing:** Jest
-- **Build:** tsc (TypeScript Compiler)
-- **CLI:** tsx for TypeScript execution
 
 ## Key Takeaways
 
@@ -223,5 +198,4 @@ See `CONFERENCE_DEMO.md` for the full conference presentation script with timing
 
 ## Further Reading
 
-- `CONFERENCE_DEMO.md` - Full conference presentation script
-- `CLAUDE.md` - Application overview for Claude Code context
+- `AGENT.md` - Application overview for Claude Code context

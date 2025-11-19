@@ -99,13 +99,18 @@ export class InventoryManager {
   }
 
   async getItemsBelowPrice(maxPrice: number): Promise<InventoryItem[]> {
-    const items = await InventoryItemModel.find({ price: { $lt: maxPrice } }).lean().exec();
+    const items = await InventoryItemModel.find({
+      price: { $lte: maxPrice }
+    }).lean().exec();
+
     return items.map(item => {
-      const reserved = item.reservedQuantity || 0;
+      const obj = item as unknown as InventoryItem;
+      const reserved = obj.reservedQuantity || 0;
       return {
-        ...(item as unknown as InventoryItem),
-        availableQuantity: item.availableQuantity - reserved
+        ...obj,
+        availableQuantity: obj.availableQuantity - reserved
       };
     });
   }
+
 }

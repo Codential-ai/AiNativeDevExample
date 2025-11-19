@@ -30,6 +30,6 @@ This is an e-commerce shopping cart application built with TypeScript, Express, 
 3. **Too Complex to Test** - Combinatorial state explosion in cart validations
 
 ### Instructions for using Invariants
-There are 3 levels of invariants in this project- universal, project-wide, and module-wide.  The universal invariant- INVARIANTS global.md is placed at the root of the project, so it applies to all projects and is available by default. The project-wide invariant is named INVARIANTS.md and is available in the root of the project.  This applies to this project only.  Module-wide invariants are placed in the `src/modules/shopping-cart/invariants/` directory and those apply to code within that module only. 
+There are 3 levels of invariants in this project- universal, project-wide, and module-wide.  The universal invariant- `INVARIANTS global.md` is placed at the root of the project, so it applies to all projects and is available by default. The project-wide invariant is named `INVARIANTS.md` and is available in the root of the project.  This applies to this project only.  Module-wide invariants are placed in the `src/modules/shopping-cart/invariants/` directory and those apply to code within that module only. 
 
 Prior to writing any code, the agents must check for all applicable invariants (based on scope) and fix any violations using the appropriate technique proscribed in the invariant file. 
